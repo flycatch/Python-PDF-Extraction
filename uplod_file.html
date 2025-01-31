@@ -4,24 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload PDF</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .custom-container {
+            max-width: 400px; /* Reduced container width */
+            margin-top: 50px;
+        }
+    </style>
 </head>
 <body>
 
-    <h1>Upload PDF File</h1>
+    <div class="container custom-container">
+        <h2 class="text-center mb-4">PDF text Extraction</h2>
+        <form action="http://localhost:5000/upload" method="POST" enctype="multipart/form-data" class="p-4 border rounded shadow-sm bg-light">
+            
+            <div class="mb-3">
+                <label for="file" class="form-label">Choose a PDF file:</label>
+                <input type="file" class="form-control" name="file" id="file" accept="application/pdf" required>
+            </div>
 
-    <!-- Form to upload the file -->
-    <form action="http://localhost:5000/upload" method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label for="output_folder" class="form-label">Output Folder Name:</label>
+                <input type="text" class="form-control" name="output_folder" id="output_folder" required>
+            </div>
 
-        <label for="file">Choose a PDF file:</label>
-        <input type="file" name="file" id="file" accept="application/pdf" required><br><br>
+            <button type="submit" class="btn btn-primary w-100">Upload</button>
 
-        <label for="output_folder">Output Folder Name:</label>
-        <input type="text" name="output_folder" id="output_folder" required><br><br>
+        </form>
+    </div>
 
-        <br><br>
-        <button type="submit">Upload</button>
-
-    </form>
+    <!-- Bootstrap JS (optional, only needed if you use Bootstrap components like modals) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>
