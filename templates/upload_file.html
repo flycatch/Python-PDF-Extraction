@@ -18,10 +18,15 @@
     <div class="container custom-container">
         <h2 class="text-center mb-4">PDF text Extraction</h2>
         <form action="/upload" method="POST" enctype="multipart/form-data" class="p-4 border rounded shadow-sm bg-light">
-            
+
             <div class="mb-3">
                 <label for="file" class="form-label">Choose a PDF file:</label>
                 <input type="file" class="form-control" name="file" id="file" accept="application/pdf" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="pattern" class="form-label">Search Pattern:</label>
+                <input type="text" class="form-control" name="pattern" id="pattern" placeholder="Type your pattern" value="Trans" required>
             </div>
 
             <button type="submit" class="btn btn-primary w-100">Process File</button>

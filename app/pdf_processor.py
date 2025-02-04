@@ -2,15 +2,18 @@ import fitz
 import re
 import os
 
-def extract_text_from_pdf(file_path):
+def extract_text_from_pdf(file_path, pattern):
     try:
         pdf_file = fitz.open(file_path)
         trans_numbers = []
         page_numbers = []
+        # Create regex dynamically based on the pattern
+        regex = rf'{re.escape(pattern)}\s+(\d+)'
 
         for number, page in enumerate(pdf_file):
             data = page.get_text("text")
-            matches = re.findall(r'Trans\s+(\d+)', data)
+            matches = re.findall(regex, data)
+
             if matches:
                 trans_numbers.append(matches[0])
                 page_numbers.append(number)
@@ -28,7 +31,7 @@ def extract_text_from_pdf(file_path):
 
             return {"message": "Files saved successfully", "files": saved_files}
         else:
-            return {"error": "No 'Trans' number found in the document"}
+            return {"error": f"No '{pattern}' number found in the document"}
 
     except Exception as e:
         return {"error": f"An error occurred during PDF processing: {str(e)}"}

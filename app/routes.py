@@ -21,6 +21,7 @@ def index():
 def upload_file():
     try:
         file = request.files["file"]
+        pattern = request.form.get("pattern", r'Trans\s+(\d+)')
 
         if "file" not in request.files:
             return jsonify({"error": "File not found"}), 400
@@ -34,7 +35,7 @@ def upload_file():
         file_path = os.path.join(UPLOAD_FOLDER, file.filename)
         file.save(file_path)
 
-        result = extract_text_from_pdf(file_path)
+        result = extract_text_from_pdf(file_path, pattern)
 
         if "error" in result:
             return jsonify(result), 400
