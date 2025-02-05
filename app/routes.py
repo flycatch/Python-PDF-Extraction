@@ -23,23 +23,23 @@ def upload_file():
         file = request.files["file"]
         pattern = request.form.get("pattern", r'Trans\s+(\d+)')
 
-        if "file" not in request.files:
-            return jsonify({"error": "File not found"}), 400
+        if not file:
+            return render_template("upload_file.html", error="File not found")
 
         if file.filename == "":
-            return jsonify({"error": "No selected file"}), 400
-        
+            return render_template("upload_file.html", error="No file selected")
+
         if not file.filename.endswith(".pdf"):
-            return jsonify({"error": "Invalid file format, Only PDFs are allowed."}), 400
-        
+            return render_template("upload_file.html", error="Invalid file format. Only PDFs are allowed.")
+
         file_path = os.path.join(UPLOAD_FOLDER, file.filename)
         file.save(file_path)
 
         result = extract_text_from_pdf(file_path, pattern)
 
         if "error" in result:
-            return jsonify(result), 400
-        
+            return render_template("upload_file.html", error=result["error"])
+
         saved_file = result["files"]
 
         if len(saved_file) == 1:
@@ -57,7 +57,7 @@ def upload_file():
             response = send_from_directory(os.path.abspath(UPLOAD_FOLDER), zip_filename, as_attachment=True)
 
     except Exception as e:
-        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+        return render_template("upload_file.html", error=f"An error occurred: {str(e)}")
 
     finally:
         delete_files_in_folder(UPLOAD_FOLDER)
