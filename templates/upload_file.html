@@ -37,6 +37,15 @@
                 <input type="text" class="form-control" name="pattern" id="pattern" placeholder="Type your pattern" value="Trans" required>
             </div>
 
+            <!-- dropdown for download format -->
+            <div class="mb-3">
+                <label for="download_format" class="form-label">Download Format:</label>
+                <select class="form-select" name="download_format" id="download_format">
+                    <option value="pdf">PDF</option>
+                    <option value="zip">ZIP</option>
+                </select>
+            </div>
+
             <button type="submit" class="btn btn-primary w-100">Process File</button>
 
         </form>
