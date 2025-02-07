@@ -1,20 +1,19 @@
 from flask import Blueprint, request, jsonify, send_from_directory, render_template
 import os
 import zipfile
+from datetime import datetime
 from .pdf_processor import extract_text_from_pdf
 from .utils import delete_old_files
 
-
 main_bp = Blueprint('main', __name__)
 
-UPLOAD_FOLDER = "uploads"
+# Ensure correct path
+UPLOAD_FOLDER = os.path.abspath("uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 @main_bp.route("/", methods=["GET"])
 def index():
-    """
-    Route to render the upload file.
-    """
+    """Route to render the upload page."""
     return render_template("upload_file.html")
 
 @main_bp.route("/upload", methods=["POST"])
@@ -22,64 +21,49 @@ def upload_file():
     try:
         file = request.files["file"]
         pattern = request.form.get("pattern", r'Trans\s+(\d+)')
-        download_format = request.form.get("download_format", "pdf")  # Get download format
+        download_format = request.form.get("download_format", "pdf")
 
-        if not file:
-            return render_template("upload_file.html", error="File not found")
-
-        if file.filename == "":
-            return render_template("upload_file.html", error="No file selected")
+        if not file or file.filename == "":
+            return jsonify({"error": "No file selected"}), 400
 
         if not file.filename.endswith(".pdf"):
-            return render_template("upload_file.html", error="Invalid file format. Only PDFs are allowed.")
+            return jsonify({"error": "Invalid file format. Only PDFs are allowed."}), 400
 
-        file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        file_path = os.path.join(UPLOAD_FOLDER, f"{timestamp}_{file.filename}")
         file.save(file_path)
 
         result = extract_text_from_pdf(file_path, pattern)
 
         if "error" in result:
-            return render_template("upload_file.html", error=result["error"])
+            return jsonify({"error": result["error"]}), 400
 
-        saved_file = result["files"]
+        saved_files = result["files"]
+
+        if not saved_files:
+            return jsonify({"error": "No files were processed."}), 400
 
         if download_format == "pdf":
-            # print(saved_file)
-            # for file in saved_file:
-            #     print(file)
-            #     folder_path, filename = os.path.split(file)
-            #     absolute_folder_path = os.path.abspath(folder_path)
-            #     response = send_from_directory(absolute_folder_path, filename, as_attachment=True)
-
-            # file_urls = [request.host_url + "download/" + os.path.basename(file) for file in saved_file]
-            # return jsonify({"files": file_urls})  # Return JSON list of file URLs
-            return render_template("download_files.html", file_urls=[f"/download/{os.path.basename(file)}" for file in saved_file])
+            file_urls = [f"/download/{os.path.basename(file)}" for file in saved_files]
+            return jsonify({"files": file_urls})
 
         elif download_format == "zip":
-            # if len(saved_file) == 1:
-            #     folder_path, filename = os.path.split(saved_file[0])
-            #     absolute_folder_path = os.path.abspath(folder_path)
-            #     response = send_from_directory(absolute_folder_path, filename, as_attachment=True)
-            # else:
-                zip_filename = "processed_pdf.zip"
-                zip_filepath = os.path.join(UPLOAD_FOLDER, zip_filename)
+            zip_filename = f"processed_{timestamp}.zip"
+            zip_filepath = os.path.join(UPLOAD_FOLDER, zip_filename)
 
-                with zipfile.ZipFile(zip_filepath, "w") as zipf:
-                    for file in saved_file:
-                        zipf.write(file, os.path.basename(file))
-
-                response = send_from_directory(os.path.abspath(UPLOAD_FOLDER), zip_filename, as_attachment=True)
+            with zipfile.ZipFile(zip_filepath, "w") as zipf:
+                for file in saved_files:
+                    zipf.write(file, os.path.basename(file))
+            print(f"/download/{zip_filename}")
+            return jsonify({"zip_file": f"/download/{zip_filename}"})
 
     except Exception as e:
-        return render_template("upload_file.html", error=f"An error occurred: {str(e)}")
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
     finally:
-        # delete_files_in_folder(UPLOAD_FOLDER)
         delete_old_files(UPLOAD_FOLDER)
-
-    return response
 
 @main_bp.route("/download/<filename>")
 def download_file(filename):
-    """ Serve individual PDFs for separate downloads """
-    return send_from_directory(os.path.abspath(UPLOAD_FOLDER), filename, as_attachment=True)
+    """Serve individual PDFs for download."""
+    return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True)
