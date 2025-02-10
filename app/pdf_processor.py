@@ -1,18 +1,27 @@
-import fitz
+import fitz  # PyMuPDF
 import re
 import os
+import pytesseract
+from pdf2image import convert_from_path
+from PIL import Image
+
 
 def extract_text_from_pdf(file_path, pattern):
     try:
         pdf_file = fitz.open(file_path)
         trans_numbers = []
         page_numbers = []
-        # Create regex dynamically based on the pattern
-        regex = rf'{re.escape(pattern)}\s+(\d+)'
 
-        for number, page in enumerate(pdf_file):
-            data = page.get_text("text")
-            matches = re.findall(regex, data)
+        # Convert each PDF page to an image
+        images = convert_from_path(file_path, dpi=300)  # High DPI for better OCR
+
+        for number, image in enumerate(images):
+            # Convert image to text using Tesseract OCR
+            text = pytesseract.image_to_string(image)
+
+            # Search for pattern in extracted text
+            regex = rf'{re.escape(pattern)}\s+(\d+)'
+            matches = re.findall(regex, text)
 
             if matches:
                 trans_numbers.append(matches[0])
