@@ -20,7 +20,8 @@ def index():
 def upload_file():
     try:
         file = request.files["file"]
-        pattern = request.form.get("pattern", r'Trans\s+(\d+)')
+        patterns = request.form.getlist("patterns") or ["Outbound delivery", "ABC", "AMS Outb Delivery", "ReplDLv HC w Trans", "Cash Sale"]  # Default patterns
+        # pattern = request.form.get("pattern", r'Trans\s+(\d+)')
         download_format = request.form.get("download_format", "pdf")
 
         if not file or file.filename == "":
@@ -33,7 +34,7 @@ def upload_file():
         file_path = os.path.join(UPLOAD_FOLDER, f"{timestamp}_{file.filename}")
         file.save(file_path)
 
-        result = extract_text_from_pdf(file_path, pattern)
+        result = extract_text_from_pdf(file_path, patterns)
 
         if "error" in result:
             return jsonify({"error": result["error"]}), 400
